@@ -22,6 +22,7 @@ namespace Asteroids_T21_B
     public partial class MainWindow : Window
     {
         List<Asteroid> Asteroiden = new List<Asteroid>();
+        Raumschiff Enterprise;
         DispatcherTimer timer = new DispatcherTimer();
         public MainWindow()
         {
@@ -41,6 +42,9 @@ namespace Asteroids_T21_B
                 item.Draw(Zeichenfläche);
                 item.Move(Zeichenfläche, timer.Interval);
             }
+            Enterprise.Draw(Zeichenfläche);
+            Enterprise.Move(Zeichenfläche, timer.Interval);
+
         }
 
         private void Btn_Start_Click(object sender, RoutedEventArgs e)
@@ -50,6 +54,36 @@ namespace Asteroids_T21_B
             for (int i = 0; i < 10; i++)
             {
                 Asteroiden.Add(new Asteroid(Zeichenfläche));
+            }
+            Enterprise = new Raumschiff(Zeichenfläche);
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (timer.IsEnabled)
+            {
+                switch (e.Key)
+                {
+                    case Key.Down:
+                    case Key.S:
+                        Enterprise.Beschleunige(false);
+                        break;
+
+                    case Key.Up:
+                    case Key.W:
+                        Enterprise.Beschleunige(true);
+                        break;
+
+                    case Key.Left:
+                    case Key.A:
+                        Enterprise.Lenke(true);
+                        break;
+
+                    case Key.Right:
+                    case Key.D:
+                        Enterprise.Lenke(false);
+                        break;
+                }
             }
         }
     }
