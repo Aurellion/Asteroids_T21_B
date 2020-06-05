@@ -21,8 +21,11 @@ namespace Asteroids_T21_B
     /// </summary>
     public partial class MainWindow : Window
     {
+        List<Spielobjekte> AlleSpielobjekte = new List<Spielobjekte>();
         List<Asteroid> Asteroiden = new List<Asteroid>();
         Raumschiff Enterprise;
+        List<Torpedo> Torpedos = new List<Torpedo>();
+
         DispatcherTimer timer = new DispatcherTimer();
         public MainWindow()
         {
@@ -37,25 +40,92 @@ namespace Asteroids_T21_B
         private void Animate(object sender, EventArgs e)
         {
             Zeichenfläche.Children.Clear();
-            foreach (Asteroid item in Asteroiden)
-            {
-                item.Draw(Zeichenfläche);
-                item.Move(Zeichenfläche, timer.Interval);
-            }
-            Enterprise.Draw(Zeichenfläche);
-            Enterprise.Move(Zeichenfläche, timer.Interval);
+            List<Torpedo> zuLöschendeTorpedos = new List<Torpedo>();
+            List<Asteroid> zuLöschendeAsteroiden = new List<Asteroid>();
 
+            bool verloren = false;
+
+            foreach (Spielobjekte item in AlleSpielobjekte)
+            {
+                if(item.Move(Zeichenfläche, timer.Interval) && item is Torpedo)
+                {
+                    zuLöschendeTorpedos.Add((Torpedo)item);
+                }
+            }
+            foreach (Asteroid A in Asteroiden)
+            {
+                foreach (Torpedo T in Torpedos)
+                {
+                    if (A.EnthältPunkt(T.x, T.y))
+                    {
+                        zuLöschendeAsteroiden.Add(A);
+                        zuLöschendeTorpedos.Add(T);
+                    }
+                }
+                
+                if (A.EnthältPunkt(Enterprise.x, Enterprise.y))
+                {
+                    zuLöschendeAsteroiden.Add(A);
+                    verloren = true;                    
+                }
+            }
+
+            if(Asteroiden.Count==0)
+            {
+                MessageBoxResult ergebnis;
+                ergebnis = MessageBox.Show("Sie haben gewonnen, nochmal?", "Game Over", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                if (ergebnis == MessageBoxResult.Yes)
+                {
+                    SpielStarten();
+                }
+                else
+                {
+                    Application.Current.Shutdown();
+                }
+            }
+
+            if (verloren)
+            {
+                MessageBoxResult ergebnis;
+                ergebnis = MessageBox.Show("Sie haben verloren, nochmal?", "Game Over", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+                if (ergebnis == MessageBoxResult.Yes)
+                {
+                    SpielStarten();
+                }
+                else
+                {
+                    Application.Current.Shutdown();
+                }
+            }
+            
+            Torpedos.RemoveAll(t => zuLöschendeTorpedos.Contains(t));
+            Asteroiden.RemoveAll(a => zuLöschendeAsteroiden.Contains(a));
+            AlleSpielobjekte.RemoveAll(x => zuLöschendeTorpedos.Contains(x) ||  zuLöschendeAsteroiden.Contains(x));
+
+            AlleSpielobjekte.ForEach(s => s.Draw(Zeichenfläche));
         }
 
         private void Btn_Start_Click(object sender, RoutedEventArgs e)
         {
             timer.Start();
             Btn_Start.IsEnabled = false;
+            SpielStarten();
+        }
+
+        public void SpielStarten()
+        {
+            AlleSpielobjekte.Clear();
+            Asteroiden.Clear();
+            Torpedos.Clear();
+
             for (int i = 0; i < 10; i++)
             {
                 Asteroiden.Add(new Asteroid(Zeichenfläche));
             }
             Enterprise = new Raumschiff(Zeichenfläche);
+
+            AlleSpielobjekte.Add(Enterprise);
+            AlleSpielobjekte.AddRange(Asteroiden);
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -82,6 +152,11 @@ namespace Asteroids_T21_B
                     case Key.Right:
                     case Key.D:
                         Enterprise.Lenke(false);
+                        break;
+
+                    case Key.Space:
+                        Torpedos.Add(new Torpedo(Enterprise));
+                        AlleSpielobjekte.Add(Torpedos.Last());
                         break;
                 }
             }

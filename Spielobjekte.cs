@@ -14,8 +14,9 @@ namespace Asteroids_T21_B
     {
         public double x { get; private set; }
         public double y { get; private set; }
-        protected double vx;
-        protected double vy;
+        public double vx { get; protected set; }
+        public double vy { get; protected set; }
+        
 
         public Spielobjekte(double x, double y, double vx, double vy)
         {
@@ -26,15 +27,33 @@ namespace Asteroids_T21_B
         }
 
         abstract public void Draw(Canvas Zeichenfläche);
-        public void Move(Canvas Zeichenfläche, TimeSpan interval)
+        public bool Move(Canvas Zeichenfläche, TimeSpan interval)
         {
+            bool rausgeflogen = false;
             x += vx * interval.TotalSeconds;
             y += vy * interval.TotalSeconds;
 
-            if (x > Zeichenfläche.ActualWidth) x = 0;
-            if (x < 0) x = Zeichenfläche.ActualWidth;
-            if (y > Zeichenfläche.ActualHeight) y = 0;
-            if (y < 0) y = Zeichenfläche.ActualHeight;
+            if (x > Zeichenfläche.ActualWidth)
+            {
+                x = 0;
+                rausgeflogen = true;
+            }
+            if (x < 0)
+            {
+                x = Zeichenfläche.ActualWidth;
+                rausgeflogen = true;
+            }
+            if (y > Zeichenfläche.ActualHeight)
+            {
+                y = 0;
+                rausgeflogen = true;
+            }
+            if (y < 0)
+            {
+                y = Zeichenfläche.ActualHeight;
+                rausgeflogen = true;
+            }
+            return rausgeflogen;
         }
 
         
@@ -59,6 +78,11 @@ namespace Asteroids_T21_B
                                             radius * Math.Sin(winkel)));
                 umriss.Fill = Brushes.Gray;
             }
+        }
+
+        public bool EnthältPunkt(double x, double y)
+        {
+            return umriss.RenderedGeometry.FillContains(new Point(x-this.x, y-this.y));
         }
 
         public override void Draw(Canvas Zeichenfläche)
@@ -119,8 +143,22 @@ namespace Asteroids_T21_B
         }
     }
 
-    //class Torpedos : Spielobjekte
-    //{
+    class Torpedo : Spielobjekte
+    {
+        public Torpedo(Raumschiff Schiff)
+            : base(Schiff.x, Schiff.y, 2*Schiff.vx, 2*Schiff.vy )
+        {
 
-    //}
+        }
+        public override void Draw(Canvas Zeichenfläche)
+        {
+            Ellipse e = new Ellipse();
+            e.Width = 5;
+            e.Height = 5;
+            e.Fill = Brushes.Red;
+            Zeichenfläche.Children.Add(e);
+            Canvas.SetLeft(e, x-0.5 * e.Width);
+            Canvas.SetTop(e, y - 0.5 * e.Height);
+        }
+    }
 }
